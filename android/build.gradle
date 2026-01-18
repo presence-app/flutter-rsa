@@ -32,6 +32,11 @@ android {
     
     compileSdkVersion 36
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
     defaultConfig {
         minSdkVersion 26
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -64,6 +69,8 @@ task nativeLibsToJar(type: Jar, description: 'create a jar archive of the native
 
 tasks.withType(JavaCompile) {
     compileTask -> compileTask.dependsOn(nativeLibsToJar)
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 dependencies {
