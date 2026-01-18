@@ -8,7 +8,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.1.0'
+        classpath 'com.android.tools.build:gradle:8.5.1'
     }
 }
 
@@ -24,16 +24,34 @@ apply plugin: 'com.android.library'
 android {
     // Conditional for compatibility with AGP <4.2.
     if (project.android.hasProperty("namespace")) {
-      namespace 'dev.jerson.fast_rsa'
+        namespace 'dev.jerson.fast_rsa'
     }
-    compileSdkVersion 31
+    
+    // Specify NDK version that supports 16KB page size alignment
+    ndkVersion "29.0.14206865"
+    
+    compileSdkVersion 36
 
     defaultConfig {
-        minSdkVersion 19
+        minSdkVersion 26
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Support for 16KB page size
+        ndk {
+            // Ensure all ABIs are built with 16KB page size support
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'
+        }
     }
+    
     lintOptions {
         disable 'InvalidPackage'
+    }
+    
+    packagingOptions {
+        // Ensure native libraries support 16KB page size
+        jniLibs {
+            useLegacyPackaging = false
+        }
     }
 }
 

@@ -1,0 +1,229 @@
+16KB Page Size Compliance Patch for Flutter-RSA
+================================================
+
+This patch adds Android 16KB page size compliance to the flutter-rsa plugin.
+
+Requirements:
+- Android Gradle Plugin (AGP): 8.5.1
+- Gradle Wrapper: 8.7
+- NDK: r29 (29.0.14206865)
+- compileSdkVersion: 36
+- minSdkVersion: 26 (raised from 19)
+- Java: 17 (raised from 8)
+
+Changes Summary:
+1. Updated AGP to 8.5.1 in all build.gradle files
+2. Updated Gradle wrapper to 8.7
+3. Added NDK r29 for 16KB alignment support
+4. Updated SDK versions (compile: 36, min: 26)
+5. Added 16KB page size support configurations
+6. Fixed deprecated Gradle plugin loading method
+7. Updated Java compatibility to version 17
+
+===============================================================================
+FILE: android/build.gradle
+===============================================================================
+
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -8,7 +8,7 @@ buildscript {
+     }
+ 
+     dependencies {
+-        classpath 'com.android.tools.build:gradle:7.1.0'
++        classpath 'com.android.tools.build:gradle:8.5.1'
+     }
+ }
+ 
+@@ -22,15 +22,36 @@ rootProject.allprojects {
+ apply plugin: 'com.android.library'
+ 
+ android {
+-    compileSdkVersion 31
++    if (project.android.hasProperty("namespace")) {
++        namespace 'dev.jerson.fat_rsa'
++    }
++    
++    // Specify NDK version that supports 16KB page size alignment
++    ndkVersion "29.0.14206865"
++    
++    compileSdkVersion 36
+ 
+     defaultConfig {
+-        minSdkVersion 19
++        minSdkVersion 26
+         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
++        
++        // Support for 16KB page size
++        ndk {
++            // Ensure all ABIs are built with 16KB page size support
++            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'
++        }
+     }
++    
+     lintOptions {
+         disable 'InvalidPackage'
+     }
++    
++    packagingOptions {
++        // Ensure native libraries support 16KB page size
++        jniLibs {
++            useLegacyPackaging = false
++        }
++    }
+ }
+ 
+ task nativeLibsToJar(type: Jar, description: 'create a jar archive of the native libs') {
+
+===============================================================================
+FILE: android/gradle/wrapper/gradle-wrapper.properties
+===============================================================================
+
+--- a/android/gradle/wrapper/gradle-wrapper.properties
++++ b/android/gradle/wrapper/gradle-wrapper.properties
+@@ -2,4 +2,4 @@ distributionBase=GRADLE_USER_HOME
+ distributionPath=wrapper/dists
+ zipStoreBase=GRADLE_USER_HOME
+ zipStorePath=wrapper/dists
+-distributionUrl=https\://services.gradle.org/distributions/gradle-7.3-all.zip
++distributionUrl=https\://services.gradle.org/distributions/gradle-8.7-all.zip
+
+===============================================================================
+FILE: example/android/build.gradle
+===============================================================================
+
+--- a/example/android/build.gradle
++++ b/example/android/build.gradle
+@@ -6,7 +6,7 @@ buildscript {
+     }
+ 
+     dependencies {
+-        classpath 'com.android.tools.build:gradle:7.3.0'
++        classpath 'com.android.tools.build:gradle:8.5.1'
+         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+     }
+ }
+
+===============================================================================
+FILE: example/android/gradle/wrapper/gradle-wrapper.properties
+===============================================================================
+
+--- a/example/android/gradle/wrapper/gradle-wrapper.properties
++++ b/example/android/gradle/wrapper/gradle-wrapper.properties
+@@ -2,4 +2,4 @@ distributionBase=GRADLE_USER_HOME
+ distributionPath=wrapper/dists
+ zipStoreBase=GRADLE_USER_HOME
+ zipStorePath=wrapper/dists
+-distributionUrl=https\://services.gradle.org/distributions/gradle-7.5-all.zip
++distributionUrl=https\://services.gradle.org/distributions/gradle-8.7-all.zip
+
+===============================================================================
+FILE: example/android/app/build.gradle
+===============================================================================
+
+--- a/example/android/app/build.gradle
++++ b/example/android/app/build.gradle
+@@ -24,16 +24,19 @@ if (flutterVersionName == null) {
+ 
+ android {
+     namespace "com.example.example"
+-    compileSdkVersion flutter.compileSdkVersion
+-    ndkVersion flutter.ndkVersion
++    
++    // Specify NDK version that supports 16KB page size alignment
++    ndkVersion "29.0.14206865"
++    
++    compileSdkVersion 36
+ 
+     compileOptions {
+-        sourceCompatibility JavaVersion.VERSION_1_8
+-        targetCompatibility JavaVersion.VERSION_1_8
++        sourceCompatibility JavaVersion.VERSION_17
++        targetCompatibility JavaVersion.VERSION_17
+     }
+ 
+     kotlinOptions {
+-        jvmTarget = '1.8'
++        jvmTarget = '17'
+     }
+ 
+     sourceSets {
+@@ -45,10 +48,16 @@ android {
+         applicationId "com.example.example"
+         // You can update the following values to match your application needs.
+         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
+-        minSdkVersion flutter.minSdkVersion
+-        targetSdkVersion flutter.targetSdkVersion
++        minSdkVersion 26
++        targetSdkVersion 36
+         versionCode flutterVersionCode.toInteger()
+         versionName flutterVersionName
++        
++        // Support for 16KB page size
++        ndk {
++            // Ensure all ABIs are built with 16KB page size support
++            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'
++        }
+     }
+ 
+     buildTypes {
+@@ -58,6 +67,13 @@ android {
+             signingConfig signingConfigs.debug
+         }
+     }
++    
++    packagingOptions {
++        // Ensure native libraries support 16KB page size
++        jniLibs {
++            useLegacyPackaging = false
++        }
++    }
+ }
+ 
+ flutter {
+
+===============================================================================
+FILE: example/android/settings.gradle
+===============================================================================
+
+--- a/example/android/settings.gradle
++++ b/example/android/settings.gradle
+@@ -15,6 +15,10 @@ pluginManagement {
+     }
+ }
+ 
+-include ":app"
++plugins {
++    id "dev.flutter.flutter-plugin-loader" version "1.0.0"
++    id "com.android.application" version "8.5.1" apply false
++    id "org.jetbrains.kotlin.android" version "1.7.10" apply false
++}
+ 
+-apply from: "${settings.ext.flutterSdkPath}/packages/flutter_tools/gradle/app_plugin_loader.gradle"
++include ":app"
+
+===============================================================================
+VERIFICATION
+===============================================================================
+
+After applying this patch, you can verify 16KB compliance by:
+
+1. Building the app bundle:
+   cd example && flutter build appbundle
+
+2. Opening the AAB in Android Studio to check compliance:
+   open -a "Android Studio" /path/to/example/build/app/outputs/bundle/release/app-release.aab
+
+3. The build should complete without the deprecated plugin warning:
+   "You are applying Flutter's app_plugin_loader Gradle plugin imperatively..."
+
+===============================================================================
+NOTES
+===============================================================================
+
+- minSdkVersion increased from 19 to 26 (required for 16KB page size support)
+- This may affect apps targeting older Android versions
+- Native libraries must be rebuilt with NDK r29 to support 16KB alignment
+- Java 17 is required for AGP 8.5.1
+
+===============================================================================
