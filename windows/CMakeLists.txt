@@ -17,6 +17,11 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)
 
+# Add page alignment support (Windows uses 4KB pages)
+if(MSVC)
+  target_link_options(${PLUGIN_NAME} PRIVATE "/ALIGN:4096")
+endif()
+
 # List of absolute paths to libraries that should be bundled with the plugin
 set(fast_rsa_bundled_libraries
   ""

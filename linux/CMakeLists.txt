@@ -18,6 +18,11 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter)
 target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
 
+# Add 16KB page size alignment support
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+  target_link_options(${PLUGIN_NAME} PRIVATE "-Wl,-z,max-page-size=16384")
+endif()
+
 set(LIBRSA_BRIDGE "librsa_bridge.so")
 set(LIBRSA_BRIDGE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/shared/${CMAKE_SYSTEM_PROCESSOR}/${LIBRSA_BRIDGE}")
 

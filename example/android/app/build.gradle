@@ -58,6 +58,15 @@ android {
             // Ensure all ABIs are built with 16KB page size support
             abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'
         }
+        
+        // Add linker flags for 16KB page alignment
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_PLATFORM=android-26"
+                cFlags "-Wl,-z,max-page-size=16384"
+                cppFlags "-Wl,-z,max-page-size=16384"
+            }
+        }
     }
 
     buildTypes {

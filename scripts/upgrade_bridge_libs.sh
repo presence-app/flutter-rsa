@@ -7,7 +7,7 @@
 # VERSION=v0.1.1 ./upgrade_bridge_libs.sh             #
 #######################################################
 
-REPO="jerson/rsa-mobile"
+REPO="presence-app/rsa-mobile"
 NAME="librsa_bridge"
 PLATFORMS=("android" "darwin" "ios" "wasm" "linux" "linux" "windows")
 OUTPUT_DIRS=("android/src/main" "macos" "ios" "lib/web/assets" "linux/shared/x86_64" "linux/shared/aarch64" "windows/shared")
